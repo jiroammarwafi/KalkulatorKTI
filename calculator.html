@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Set karakter encoding ke UTF-8 untuk mendukung berbagai karakter -->
+    <meta charset="UTF-8">
+    <!-- Mengatur tampilan agar responsif di perangkat mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Judul halaman -->
+    <title>Kalkulator Sederhana</title>
+    <!-- Menyertakan font Montserrat dari Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+        /* Mengatur margin, padding, dan box-sizing pada semua elemen */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Pengaturan tampilan body untuk center alignment */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: "Montserrat", sans-serif;
+        }
+
+        /* Pengaturan tampilan utama kalkulator */
+        .calculator {
+            width: 240pt;
+            background-color: #000000;
+            border-radius: 8px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            /* padding: 20px;*/
+        }
+
+        /* Pengaturan tampilan area display */
+        .display {
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            padding: 18px;
+            background-color: #000;
+            padding-left: 8px;
+            border-radius: 8px;
+            margin-bottom: 0px;
+            margin-top: 120px;
+            height: 120px;
+        }
+
+        /* Pengaturan teks operasi pada display */
+        .display .operation {
+            font-size: 18pt;
+            color: #259f93;
+        }
+
+        /* Pengaturan teks hasil pada display */
+        .display .result {
+            font-size: 36pt;
+            color: #FFFFFF;
+        }
+
+        /* Pengaturan tampilan tombol kalkulator */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 kolom dengan lebar yang sama */
+            column-gap: 2pt;
+            gap: 1.2pt;
+        }
+
+        /* Pengaturan dasar untuk tombol */
+        button {
+            font-size: 18pt;
+            padding: 20px;
+            background-color: #011313;
+            color: #FFFFFF;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        /* Pengaturan khusus untuk setiap tombol ke-4 (operator) */
+        button:nth-child(4n) {
+            background-color: #0c4345;
+            font-size: 24pt;
+        }
+
+        /* Pengaturan khusus untuk tombol = */
+        button:nth-child(15) {
+            background-color: #259f93;
+            font-size: 24pt;
+        }
+
+        /* Membuat tombol pertama pada baris terakhir memiliki border radius kiri bawah */
+        button:nth-child(13) {
+            border-radius: 0 0 0 8px;
+        }
+
+        /* Membuat tombol terakhir pada baris terakhir memiliki border radius kanan bawah */
+        button:nth-child(16) {
+            font-size: 16pt;
+            border-radius: 0 0 8px 0;
+        }
+
+        /* Efek hover pada tombol */
+        button:hover {
+            background-color: #0c4345;
+        }
+
+        /* Efek aktif (saat ditekan) pada tombol */
+        button:active {
+            background-color: #083031;
+        }
+
+        /* Efek hover khusus untuk tombol dengan class .special-button */
+        .special-button:hover {
+            background-color: #259f93;
+        }
+
+        /* Efek aktif khusus untuk tombol dengan class .special-button */
+        .special-button:active {
+            background-color: #083031;
+        }
+    </style>
+</head>
+<body>
+    <!-- Elemen utama kalkulator -->
+    <div class="calculator">
+        <!-- Area display yang menampilkan operasi dan hasil -->
+        <div class="display">
+            <div class="operation" id="operation"></div> <!-- Display operasi saat ini -->
+            <div class="result" id="result">0</div> <!-- Display hasil -->
+        </div>
+        <!-- Area tombol kalkulator -->
+        <div class="buttons">
+            <!-- Tombol angka dan operator kalkulator -->
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button class="special-button">+</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button class="special-button">-</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button class="special-button">×</button>
+            <button>0</button>
+            <button>.</button>
+            <button>=</button>
+            <button class="special-button">/</button>
+        </div>
+    </div>
+
+    <script>
+        // Mendapatkan elemen display hasil dan operasi
+const resultDisplay = document.getElementById("result");
+const operationDisplay = document.getElementById("operation");
+
+// Deklarasi variabel untuk menyimpan angka dan operator
+let angkaArray = [];
+let operatorArray = [];
+let currentNumber = '';
+let currentOperator = '';
+let lastInputNumber = ''; // Variabel untuk menyimpan angka input terakhir
+
+// Fungsi untuk memperbarui tampilan operasi dan hasil
+function updateDisplay() {
+    resultDisplay.textContent = currentNumber || '0';
+    // Menggabungkan angka dan operator untuk ditampilkan sesuai format
+    let displayText = angkaArray.map((num, i) => {
+        return i < operatorArray.length ? `${num} ${operatorArray[i]}` : num;
+    }).join(' ');
+
+    // Tampilkan angka terakhir atau '0' jika tidak ada angka
+    operationDisplay.textContent = displayText + ' ' + (lastInputNumber || '0');
+}
+
+// Fungsi untuk menambah angka yang diklik ke currentNumber
+function inputAngka(angka) {
+    // Jika `lastInputNumber` sedang menampilkan '0', ganti dengan angka baru
+    if (lastInputNumber === '0') {
+        currentNumber = angka; // Reset angka input ke angka baru
+    } else {
+        currentNumber += angka;
+    }
+    lastInputNumber = currentNumber; // Perbarui angka terakhir dengan angka input saat ini
+    updateDisplay();
+}
+
+// Fungsi untuk menangani input operator
+function inputOperator(op) {
+    if (currentNumber === '' && angkaArray.length === 0) return;
+
+    if (currentNumber !== '') {
+        angkaArray.push(currentNumber);
+        currentNumber = '';
+    }
+
+    if (angkaArray.length > operatorArray.length) {
+        operatorArray.push(op);
+    } else {
+        operatorArray[operatorArray.length - 1] = op;
+    }
+
+    currentOperator = op;
+    lastInputNumber = ''; // Reset lastInputNumber setelah operator diinput
+    updateDisplay();
+}
+
+// Fungsi untuk menghitung hasil operasi
+function calculate() {
+    if (currentNumber) {
+        angkaArray.push(currentNumber);
+        currentNumber = '';
+    }
+
+    let total = parseFloat(angkaArray[0]);
+    for (let i = 1; i < angkaArray.length; i++) {
+        let currentAngka = parseFloat(angkaArray[i]);
+        switch (operatorArray[i - 1]) {
+            case '+': total += currentAngka; break;
+            case '-': total -= currentAngka; break;
+            case '×': total *= currentAngka; break;
+            case '/': 
+                if (currentAngka !== 0) {
+                    total /= currentAngka;
+                } else {
+                    resultDisplay.textContent = "Error";
+                    operationDisplay.textContent = "";
+                    angkaArray = [];
+                    operatorArray = [];
+                    lastInputNumber = ''; // Reset lastInputNumber pada error
+                    return;
+                }
+                break;
+        }
+    }
+
+    resultDisplay.textContent = total;
+    lastInputNumber = '0'; // Set lastInputNumber ke '0' setelah hasil ditampilkan
+    operationDisplay.textContent = angkaArray(' ') + ' ' + operatorArray(' '); 
+    angkaArray = [total.toString()];
+    operatorArray = [];
+    currentOperator = '';
+}
+
+// Event listener untuk menangani klik pada tombol kalkulator
+document.querySelectorAll(".buttons button").forEach(button => {
+    button.addEventListener("click", () => {
+        const value = button.textContent;
+        if (!isNaN(value)) {
+            inputAngka(value);
+        } else if (value === ".") {
+            if (!currentNumber.includes(".")) {
+                currentNumber += ".";
+                updateDisplay();
+            }
+        } else if (value === "=") {
+            calculate();
+        } else {
+            inputOperator(value);
+        }
+    });
+});
+
+    </script>
+</body>
+</html>
